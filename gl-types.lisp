@@ -1,33 +1,73 @@
-
+g
 (in-package #:bujagame-jukebox)
 
-  
-(defun make-attribute-data-array (dim type)
-  `(make-array ,dim :element-type ',type))
 
-;; GL-PLAYGROUND> (make-attribute-data-array 3 'vec3)
-;; (MAKE-ARRAY 3 :ELEMENT-TYPE 'VEC3)
+;; (setf *v3-array*  (make-array 3 :element-type 'gl-v3 :initial-element (make-gl-v3)))
+;; #(#(0.0 0.0 0.0) #(0.0 0.0 0.0) #(0.0 0.0 0.0))
 
-;; GL-PLAYGROUND> (setf *v2-array* (make-array 3 :element-type 'thing :adjustable t))
-;; #(0 0 0)
+(defparameter *gl-types*
+   ;; size (multiple of 4), default scale, default clamp, base type, count, gl type
+   `(:vec1 (4 nil nil single-float 1 :float)
+     :vec2 (8 nil nil single-float 2 :float)
+     :vec3 (12 nil nil single-float 3 :float)
+     :vec4 (16 nil nil single-float 4 :float)
+     :vec1u8 (4 255 (0 1) (unsigned-byte 8) 1 :unsigned-byte)
+     :vec2u8 (4 255 (0 1) (unsigned-byte 8) 2 :unsigned-byte)
+     :vec3u8 (4 255 (0 1) (unsigned-byte 8) 3 :unsigned-byte)
+     :vec4u8 (4 255 (0 1) (unsigned-byte 8) 4 :unsigned-byte)
+     :vec1s8 (4 127 (-1 1) (signed-byte 8) 1 :byte)
+     :vec2s8 (4 127 (-1 1) (signed-byte 8) 2 :byte)
+     :vec3s8 (4 127 (-1 1) (signed-byte 8) 3 :byte)
+     :vec4s8 (4 127 (-1 1) (signed-byte 8) 4 :byte)
+     :vec1u16 (4 65535 (0 1) (unsigned-byte 16) 1 :unsigned-short)
+     :vec2u16 (4 65535 (0 1) (unsigned-byte 16) 2 :unsigned-short)
+     :vec3u16 (8 65535 (0 1) (unsigned-byte 16) 3 :unsigned-short)
+     :vec4u16 (8 65535 (0 1) (unsigned-byte 16) 4 :unsigned-short)
+     :vec1s16 (4 32767 (-1 1) (signed-byte 16) 1 :short)
+     :vec2s16 (4 32767 (-1 1) (signed-byte 16) 2 :short)
+     :vec3s16 (8 32767 (-1 1) (signed-byte 16) 3 :short)
+     :vec4s16 (8 32767 (-1 1) (signed-byte 16) 4 :short)))
 
-;; Need to think about this; do I work with untyped array elements and unpack to typed?
-;; (array-total-size  (aref *v3-array* 0)) - use as size?
-;; More convienent to work with lisp arrays and splurge to gpu as and when
-;; (make-gpu-buffer )
-;; (upload-gpu-buffer )
 
-;; eg (unpack-to-simple-vector (make-array 6 :element-type 'rtg-math.types::vec3 :initial-element (v3:make 0.0 0.0 0.0)))
-(defun unpack-to-simple-vector (array)
-  (let ((component-count (array-total-size (aref array 0)))
-	(element-count (array-total-size array))
-	(component-type (array-element-type (aref array 0))))
-    (let ((buffer
-	   (make-array (* element-count component-count) :element-type component-type)))
-    (iterate
-      (for component in-vector array with-index element-index)
-      (iterate
-	(for scalar in-vector component with-index component-index)
-	(setf (aref buffer (+ (* element-index component-count) component-index))
-	      scalar)))
-    buffer)))
+
+(defun gl-type (x)
+  (typecase x
+    (single-float :float)
+    ((unsigned-byte 8) :unsigned-byte)
+    ((signed-byte 8) :byte)
+    ((unsigned-byte 16) :unsigned-short)
+    ((signed-byte 16) :short)
+    ((unsigned-byte 32) :unsigned-int)
+    ((signed-byte 32) :int)))
+
+
+(defun cl-type (x)
+  (case x
+    (:float 'single-float)
+    (:unsigned-byte '(unsigned-byte 8))
+    (:byte '(signed-byte 8))
+    (:unsigned-short '(unsigned-byte 16))
+    (:short '(signed-byte 16))
+    (:unsigned-int '(unsigned-byte 32))
+    (:int '(signed-byte 32))))
+
+(defun cl-default-value (x)
+  (case x
+    (:float (the single-float 0.0))
+    (:unsigned-byte (the (unsigned-byte 8) 0))
+    (:byte (the (signed-byte 8) 0))
+    (:unsigned-short (the (unsigned-byte 16) 0))
+    (:short (the (signed-byte 16) 0))
+    (:unsigned-int (the (unsigned-byte 32) 0))
+    (:int (the (signed-byte 32) 0))))
+
+(defun make-gl-component-array (component-type component-count)
+  (make-array component-count :element-type (cl-type component-type) :initial-element (cl-default-value component-type)))	   
+
+(defun gl-component-array-type (component-type component-count)
+  `(simple-array ,(cl-type component-type) ,(list component-count)))
+
+(defun make-gl-data-array (element-count component-type component-count)
+ (make-array element-count :element-type (gl-component-array-type component-type component-count) :initial-element (make-gl-component-array component-type component-count)))
+		   
+
