@@ -9,11 +9,16 @@
                #:toot
                #:com.gigamonkeys.binary-data
                #:babel
-			   #:opticl
-			   #:cl-fad)
+	       #:opticl
+	       #:cl-fad
+	       #:cl-opengl
+	       #:glop
+	       #:rtg-math)
   :serial t
   :components ((:file "package")
                (:file "bujagame-jukebox")
+			   (:file "gl-types")
 			   (:file "images")
+			   (:file "glop-loop")
 			   (:file "server")))
 
