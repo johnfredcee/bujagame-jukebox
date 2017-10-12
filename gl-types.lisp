@@ -1,4 +1,4 @@
-g
+
 (in-package #:bujagame-jukebox)
 
 
