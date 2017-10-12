@@ -14,5 +14,6 @@
   :serial t
   :components ((:file "package")
                (:file "bujagame-jukebox")
-			   (:file "images")))
+			   (:file "images")
+			   (:file "server")))
 
