@@ -22,6 +22,12 @@
   (declare (ignore window))
   (format t "Close~%"))
 
+(defmethod glop:on-key (window pressed keycode keysym string)
+  (declare (ignore window keysym string))
+  (format t "Button ~:[released~;pressed~]: ~S~%" pressed keycode))
+
+  
+
 (defun gl-main ()
   (glop:with-window (win "Glop test window" 800 600)
     (format t "Created window: ~S~%" win)
